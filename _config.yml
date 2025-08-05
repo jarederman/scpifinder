@@ -1,0 +1,31 @@
+title: SCPI指令智能搜索工具
+description: 基于AI向量匹配技术的SCPI指令搜索工具，支持自然语言查询
+baseurl: ""
+url: "https://jarederman.github.io"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - "*.py"
+  - "*.pdf"
+  - "requirements.txt"
+  - "优化总结.md"
+
+# Include files
+include:
+  - "scpi_data.js" 

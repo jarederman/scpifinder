@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCPI指令智能搜索工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .search-section {
+            margin-bottom: 30px;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            bottom: 5px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-tips {
+            text-align: center;
+            margin-top: 15px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .result-rank {
+            display: inline-block;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .result-instruction {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .result-description {
+            color: #34495e;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .result-original {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 3px solid #667eea;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #495057;
+            line-height: 1.5;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .result-original-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-card {
+                padding: 15px;
+            }
+        }
+
+        .example-queries {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .example-query {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .example-query:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 SCPI指令智能搜索</h1>
+            <p>输入描述或关键词，快速找到相关的SCPI指令</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" 
+                       placeholder="请输入您的问题或描述，例如：acquire、trigger、measurement frequency...">
+                <button class="search-btn" onclick="performSearch()">搜索</button>
+            </div>
+            <div class="search-tips">
+                💡 提示：使用英文关键词效果更好，支持中英文混合搜索
+            </div>
+            <div class="example-queries">
+                <span class="example-query" onclick="searchExample('acquire')">acquire</span>
+                <span class="example-query" onclick="searchExample('trigger')">trigger</span>
+                <span class="example-query" onclick="searchExample('measurement')">measurement</span>
+                <span class="example-query" onclick="searchExample('frequency')">frequency</span>
+                <span class="example-query" onclick="searchExample('configure')">configure</span>
+                <span class="example-query" onclick="searchExample('采集模式')">采集模式</span>
+            </div>
+        </div>
+
+        <div class="stats" id="statsContainer" style="display: none;">
+            <span id="searchStats"></span>
+        </div>
+
+        <div class="results-container" id="resultsContainer">
+            <div class="no-results">
+                <h3>🚀 欢迎使用SCPI指令搜索工具</h3>
+                <p>在上方输入您的问题开始搜索，系统将为您找到最匹配的前5个SCPI指令</p>
+                <br>
+                <p><strong>数据库包含1713条SCPI指令</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="scpi_data.js"></script>
+    <script>
+        // 搜索算法
+        function searchSCPI(query, topK = 5) {
+            if (!query.trim()) return [];
+            
+            const queryLower = query.toLowerCase();
+            const queryWords = queryLower.split(/\s+/).filter(word => word.length > 0);
+            
+            // 计算每个指令的相关性分数
+            const results = SCPI_DATA.map((item, index) => {
+                let score = 0;
+                
+                const instruction = item.instruction.toLowerCase();
+                const description = item.description.toLowerCase();
+                const originalText = item.original_text.toLowerCase();
+                
+                // 1. 指令名称完全匹配（最高权重）
+                if (instruction.includes(queryLower)) {
+                    score += 100;
+                }
+                
+                // 2. 描述中的关键词匹配
+                queryWords.forEach(word => {
+                    if (instruction.includes(word)) score += 50;
+                    if (description.includes(word)) score += 30;
+                    if (originalText.includes(word)) score += 20;
+                });
+                
+                // 3. 模糊匹配增强
+                queryWords.forEach(word => {
+                    // 英文相关词匹配
+                    const synonyms = {
+                        'acquire': ['acq', 'acquisition', '采集'],
+                        'trigger': ['trig', 'triggering', '触发'],
+                        'measurement': ['measure', 'meas', '测量'],
+                        'frequency': ['freq', 'hz', '频率'],
+                        'voltage': ['volt', 'v', '电压'],
+                        'current': ['curr', 'amp', '电流'],
+                        'configure': ['config', 'set', '配置', '设置'],
+                        'query': ['?', 'get', '查询'],
+                        'display': ['disp', 'show', '显示'],
+                        'channel': ['ch', 'chan', '通道']
+                    };
+                    
+                    Object.entries(synonyms).forEach(([key, syns]) => {
+                        if (word === key || syns.includes(word)) {
+                            syns.forEach(syn => {
+                                if (instruction.includes(syn)) score += 25;
+                                if (description.includes(syn)) score += 15;
+                                if (originalText.includes(syn)) score += 10;
+                            });
+                        }
+                    });
+                });
+                
+                // 4. 字符串相似度增强
+                const editDistance = (a, b) => {
+                    const matrix = Array(a.length + 1).fill().map(() => Array(b.length + 1).fill(0));
+                    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+                    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+                    
+                    for (let i = 1; i <= a.length; i++) {
+                        for (let j = 1; j <= b.length; j++) {
+                            const cost = a[i-1] === b[j-1] ? 0 : 1;
+                            matrix[i][j] = Math.min(
+                                matrix[i-1][j] + 1,
+                                matrix[i][j-1] + 1,
+                                matrix[i-1][j-1] + cost
+                            );
+                        }
+                    }
+                    return matrix[a.length][b.length];
+                };
+                
+                // 计算与指令名称的编辑距离
+                const instructionWords = instruction.split(/[:\s]+/);
+                queryWords.forEach(qword => {
+                    instructionWords.forEach(iword => {
+                        if (iword.length > 2 && qword.length > 2) {
+                            const distance = editDistance(qword, iword);
+                            const similarity = 1 - distance / Math.max(qword.length, iword.length);
+                            if (similarity > 0.7) {
+                                score += similarity * 20;
+                            }
+                        }
+                    });
+                });
+                
+                return {
+                    ...item,
+                    score: score,
+                    index: index
+                };
+            });
+            
+            // 排序并返回前topK个结果
+            return results
+                .filter(item => item.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, topK);
+        }
+
+        // 执行搜索
+        function performSearch() {
+            const query = document.getElementById('searchInput').value;
+            if (!query.trim()) {
+                alert('请输入搜索内容');
+                return;
+            }
+            
+            const resultsContainer = document.getElementById('resultsContainer');
+            const statsContainer = document.getElementById('statsContainer');
+            
+            // 显示加载状态
+            resultsContainer.innerHTML = '<div class="loading">🔍 正在搜索...</div>';
+            
+            // 模拟搜索延迟（实际环境中移除）
+            setTimeout(() => {
+                const results = searchSCPI(query, 5);
+                displayResults(results, query);
+                
+                // 显示统计信息
+                if (results.length > 0) {
+                    document.getElementById('searchStats').textContent = 
+                        `找到 ${results.length} 个匹配结果（查询："${query}"）`;
+                    statsContainer.style.display = 'block';
+                } else {
+                    statsContainer.style.display = 'none';
+                }
+            }, 300);
+        }
+
+        // 显示搜索结果
+        function displayResults(results, query) {
+            const container = document.getElementById('resultsContainer');
+            
+            if (results.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <h3>😔 未找到匹配结果</h3>
+                        <p>请尝试其他关键词，如：acquire、trigger、measurement、frequency</p>
+                        <p>建议使用英文关键词以获得更好的搜索效果</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const rankEmojis = ['🥇', '🥈', '🥉', '🏅', '🎖️'];
+            
+            container.innerHTML = results.map((result, index) => {
+                const emoji = rankEmojis[index] || '🏅';
+                return `
+                    <div class="result-card">
+                        <div class="result-rank">${emoji} 排名 #${index + 1}</div>
+                        <div class="result-instruction">${escapeHtml(result.instruction)}</div>
+                        <div class="result-description">📖 ${escapeHtml(result.description)}</div>
+                        <div class="result-original-label">📄 原文档内容：</div>
+                        <div class="result-original">${escapeHtml(result.original_text)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 示例查询
+        function searchExample(query) {
+            document.getElementById('searchInput').value = query;
+            performSearch();
+        }
+
+        // 回车键搜索
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log(`SCPI数据库已加载，共 ${SCPI_DATA.length} 条指令`);
+        });
+    </script>
+</body>
+</html> 
