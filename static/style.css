@@ -1,0 +1,441 @@
+/* 全局样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.4;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    font-size: 14px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 头部搜索区域 */
+.search-header {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.search-header h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#searchInput {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 25px;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+#searchInput:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#searchBtn {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+#searchBtn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+#searchBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.search-tips {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+}
+
+.example-queries {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.example-queries span {
+    color: #666;
+    margin-right: 10px;
+    font-weight: 500;
+}
+
+.example-btn {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 15px;
+    padding: 5px 12px;
+    margin: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.example-btn:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* 加载和错误状态 */
+.loading, .error-message {
+    text-align: center;
+    padding: 20px;
+    margin: 10px 0;
+    border-radius: 10px;
+}
+
+.loading {
+    background: rgba(255, 255, 255, 0.9);
+    color: #667eea;
+}
+
+.loading-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.error-message {
+    background: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* 结果容器 */
+.results-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.results-header {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.results-header h2 {
+    color: #2c3e50;
+    margin-bottom: 5px;
+    font-size: 1.3rem;
+}
+
+.results-count {
+    color: #666;
+    font-size: 13px;
+}
+
+/* 结果网格 */
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 12px;
+    flex: 1;
+}
+
+/* 结果卡片 */
+.result-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border-left: 4px solid #667eea;
+    height: fit-content;
+}
+
+.result-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.result-rank {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+.result-score {
+    background: #667eea;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.result-instruction {
+    margin-bottom: 10px;
+}
+
+.result-instruction code {
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    color: #e83e8c;
+    font-weight: bold;
+}
+
+.result-description {
+    margin-bottom: 10px;
+    color: #555;
+    line-height: 1.4;
+}
+
+.result-original {
+    margin-bottom: 8px;
+}
+
+.original-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.toggle-btn {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 15px;
+    padding: 4px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+    background: #667eea;
+    color: white;
+}
+
+.original-content {
+    max-height: 60px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+.result-original.expanded .original-content {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.original-content pre {
+    font-size: 11px;
+    line-height: 1.3;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.result-similarity {
+    text-align: right;
+    color: #999;
+}
+
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+}
+
+/* 页脚 */
+.footer {
+    text-align: center;
+    padding: 15px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    margin-top: 15px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .results-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 5px;
+    }
+    
+    .search-header {
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .search-header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+    
+    .search-box {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .results-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .result-card {
+        padding: 12px;
+    }
+    
+    .original-content {
+        max-height: 80px;
+    }
+    
+    .result-original.expanded .original-content {
+        max-height: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-header h1 {
+        font-size: 1.3rem;
+    }
+    
+    #searchInput, #searchBtn {
+        font-size: 14px;
+        padding: 10px 12px;
+    }
+    
+    .example-queries {
+        text-align: left;
+    }
+    
+    .example-btn {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+}
+
+/* 自定义滚动条 */
+.original-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.original-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.original-content::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+.original-content::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+/* 动画效果 */
+.result-card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 高度优化：确保在标准屏幕上不需要滚动 */
+@media (min-height: 800px) and (min-width: 1024px) {
+    .results-grid {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+}
+
+/* 对于超宽屏幕，使用更多列 */
+@media (min-width: 1600px) {
+    .results-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+} 

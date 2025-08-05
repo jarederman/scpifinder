@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCPI指令智能搜索</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部搜索区域 -->
+        <header class="search-header">
+            <h1>🔍 SCPI指令智能搜索</h1>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="输入您要查找的SCPI指令描述，如：acquire, trigger, frequency measurement..." 
+                       autocomplete="off" autofocus>
+                <button id="searchBtn">搜索</button>
+            </div>
+            <div class="search-tips">
+                💡 搜索提示：使用英文关键词效果更好，如 "acquire"、"trigger"、"measurement frequency"
+            </div>
+        </header>
+
+        <!-- 加载状态 -->
+        <div id="loading" class="loading hidden">
+            <div class="loading-spinner"></div>
+            <p>正在搜索中...</p>
+        </div>
+
+        <!-- 错误信息 -->
+        <div id="errorMessage" class="error-message hidden"></div>
+
+        <!-- 搜索结果区域 -->
+        <main class="results-container">
+            <div id="resultsHeader" class="results-header hidden">
+                <h2>搜索结果 <span id="searchQuery"></span></h2>
+                <div class="results-count">找到 <span id="resultCount">0</span> 条匹配结果</div>
+            </div>
+
+            <!-- 结果列表 -->
+            <div id="resultsList" class="results-grid">
+                <!-- 动态生成的搜索结果将插入这里 -->
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>基于AI向量匹配的SCPI指令智能搜索工具 | 
+               <span id="dataInfo">数据加载中...</span>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        class SCPISearch {
+            constructor() {
+                this.initializeElements();
+                this.bindEvents();
+                this.checkHealth();
+            }
+
+            initializeElements() {
+                this.searchInput = document.getElementById('searchInput');
+                this.searchBtn = document.getElementById('searchBtn');
+                this.loading = document.getElementById('loading');
+                this.errorMessage = document.getElementById('errorMessage');
+                this.resultsHeader = document.getElementById('resultsHeader');
+                this.resultsList = document.getElementById('resultsList');
+                this.searchQuery = document.getElementById('searchQuery');
+                this.resultCount = document.getElementById('resultCount');
+                this.dataInfo = document.getElementById('dataInfo');
+            }
+
+            bindEvents() {
+                this.searchBtn.addEventListener('click', () => this.search());
+                this.searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.search();
+                    }
+                });
+
+                // 示例查询按钮
+                this.addExampleQueries();
+            }
+
+            addExampleQueries() {
+                const examples = ['acquire', 'trigger', 'measurement frequency', '频率测量', '如何配置触发'];
+                const tipsElement = document.querySelector('.search-tips');
+                
+                const exampleContainer = document.createElement('div');
+                exampleContainer.className = 'example-queries';
+                exampleContainer.innerHTML = '<span>快速示例：</span>';
+                
+                examples.forEach(example => {
+                    const button = document.createElement('button');
+                    button.className = 'example-btn';
+                    button.textContent = example;
+                    button.onclick = () => {
+                        this.searchInput.value = example;
+                        this.search();
+                    };
+                    exampleContainer.appendChild(button);
+                });
+                
+                tipsElement.appendChild(exampleContainer);
+            }
+
+            async checkHealth() {
+                try {
+                    const response = await fetch('/health');
+                    const data = await response.json();
+                    this.dataInfo.textContent = `已加载 ${data.data_count} 条SCPI指令`;
+                } catch (error) {
+                    this.dataInfo.textContent = '数据加载失败';
+                }
+            }
+
+            async search() {
+                const query = this.searchInput.value.trim();
+                if (!query) {
+                    this.showError('请输入搜索内容');
+                    return;
+                }
+
+                this.showLoading();
+                this.hideError();
+
+                try {
+                    const response = await fetch('/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ query: query })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || '搜索失败');
+                    }
+
+                    this.displayResults(data);
+
+                } catch (error) {
+                    this.showError(error.message);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            displayResults(data) {
+                this.searchQuery.textContent = `"${data.query}"`;
+                this.resultCount.textContent = data.total;
+                this.resultsHeader.classList.remove('hidden');
+
+                this.resultsList.innerHTML = '';
+
+                if (data.results.length === 0) {
+                    this.resultsList.innerHTML = '<div class="no-results">未找到匹配的SCPI指令</div>';
+                    return;
+                }
+
+                data.results.forEach(result => {
+                    const resultCard = this.createResultCard(result);
+                    this.resultsList.appendChild(resultCard);
+                });
+            }
+
+            createResultCard(result) {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+
+                const rankIcon = this.getRankIcon(result.rank);
+                
+                card.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-rank">${rankIcon} #${result.rank}</div>
+                        <div class="result-score">得分: ${result.score.toFixed(4)}</div>
+                    </div>
+                    <div class="result-instruction">
+                        <strong>📝 指令:</strong> <code>${this.escapeHtml(result.instruction)}</code>
+                    </div>
+                    <div class="result-description">
+                        <strong>📖 描述:</strong> ${this.escapeHtml(result.description)}
+                    </div>
+                    <div class="result-original">
+                        <div class="original-header">
+                            <strong>📄 原文:</strong>
+                            <button class="toggle-btn" onclick="this.parentElement.parentElement.classList.toggle('expanded')">
+                                展开/收起
+                            </button>
+                        </div>
+                        <div class="original-content">
+                            <pre>${this.escapeHtml(result.original_text)}</pre>
+                        </div>
+                    </div>
+                    <div class="result-similarity">
+                        <small>余弦相似度: ${result.cosine_similarity.toFixed(4)}</small>
+                    </div>
+                `;
+
+                return card;
+            }
+
+            getRankIcon(rank) {
+                const icons = ['🥇', '🥈', '🥉', '🏅', '🎖️'];
+                return icons[rank - 1] || '📋';
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            showLoading() {
+                this.loading.classList.remove('hidden');
+                this.searchBtn.disabled = true;
+                this.searchBtn.textContent = '搜索中...';
+            }
+
+            hideLoading() {
+                this.loading.classList.add('hidden');
+                this.searchBtn.disabled = false;
+                this.searchBtn.textContent = '搜索';
+            }
+
+            showError(message) {
+                this.errorMessage.textContent = message;
+                this.errorMessage.classList.remove('hidden');
+            }
+
+            hideError() {
+                this.errorMessage.classList.add('hidden');
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new SCPISearch();
+        });
+    </script>
+</body>
+</html> 
